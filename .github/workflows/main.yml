@@ -1,0 +1,45 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    env:
+      VERSION: v1.2.0
+      STAGING_API_URL: https://staging-api.example.com
+      PRODUCTION_API_URL: https://api.example.com
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set Environment Variables
+        id: set-env
+        run: |
+          if [ "${{ github.ref_name }}" == "main" ]; then
+            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+            echo "API_URL=${{ env.PRODUCTION_API_URL }}" >> $GITHUB_ENV
+          elif [ "${{ github.ref_name }}" == "develop" ]; then
+            echo "DEPLOY_ENV=staging" >> $GITHUB_ENV
+            echo "API_URL=${{ env.STAGING_API_URL }}" >> $GITHUB_ENV
+          fi
+
+      - name: Print Deployment Message
+        run: |
+          if [ "${DEPLOY_ENV}" == "production" ]; then
+            echo "Deploying to Production"
+          elif [ "${DEPLOY_ENV}" == "staging" ]; then
+            echo "Deploying to Staging"
+          fi
+          echo "Using API URL: ${API_URL}"
+          echo "Version: $VERSION"
+
+      - name: Deploy Application
+        run: |
+          echo "Deploying application to ${DEPLOY_ENV} environment"
